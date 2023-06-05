@@ -2,7 +2,7 @@
 %
 % Detect and describe features for all images in a directory 
 %
-% IN: im_dir ... directory of images (assumed to be *.jpg)
+% IN: im_dir ... directory of images
 % OUT: for each image, a matlab file *.desc_hess is created in directory im_dir, 
 %      containing the Hess' SIFT  Pyramid descriptors.
 %
@@ -19,7 +19,7 @@ function detect_features_gist(im_dir,file_ext,varargin)
 
     
 	
-    dd = dir([im_dir,'/*.jpg']);
+    dd = dir([im_dir, strcat('/*.', file_ext)]);
 
     for i = 1:length(dd)
         fname = [im_dir,'/',dd(i).name];  

@@ -79,6 +79,7 @@ nwords_codebook = 500;
 
 % image file extension
 file_ext='jpg';
+dotFile_ext = strcat('.', file_ext);
 
 % Create a new dataset split
 file_split = 'split.mat';
@@ -121,7 +122,7 @@ for i = 1:length(data)
         fprintf('Loading %s \n',fname);
         tmp = load(fname,'-mat');
         tmp.desc.class=i;
-        tmp.desc.imgfname=regexprep(fname,['.' desc_name],'.jpg');
+        tmp.desc.imgfname=regexprep(fname,['.' desc_name], dotFile_ext);
         desc_train(lasti)=tmp.desc;
         desc_train(lasti).sift = single(desc_train(lasti).sift);
         lasti=lasti+1;
@@ -157,7 +158,7 @@ for i = 1:length(data)
         fprintf('Loading %s \n',fname);
         tmp = load(fname,'-mat');
         tmp.desc.class=i;
-        tmp.desc.imgfname=regexprep(fname,['.' desc_name],'.jpg');
+        tmp.desc.imgfname=regexprep(fname,['.' desc_name], dotFile_ext);
         desc_test(lasti)=tmp.desc;
         desc_test(lasti).sift = single(desc_test(lasti).sift);
         lasti=lasti+1;

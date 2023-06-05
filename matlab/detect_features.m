@@ -2,7 +2,7 @@
 %
 % Detect and describe features for all images in a directory 
 %
-% IN: im_dir ... directory of images (assumed to be *.jpg)
+% IN: im_dir ... directory of images
 % OUT: for each image, a matlab file *.desc is created in directory im_dir, 
 %      containing detected LoG features described with SIFT descriptors.
 %
@@ -20,7 +20,7 @@
 
 function [] = detect_features(im_dir,file_ext,show_img)
         
-    dd = dir(fullfile(im_dir,'*.jpg'));
+    dd = dir(fullfile(im_dir, strcat('*.', file_ext)));
     if ~exist('show_img','var')
         show_img = false;
     end    

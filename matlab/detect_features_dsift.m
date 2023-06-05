@@ -2,7 +2,7 @@
 %
 % Detect and describe features for all images in a directory 
 %
-% IN:   im_dir    ... directory of images (assumed to be *.jpg)
+% IN:   im_dir    ... directory of images
 %       file_ext  ... a string (e.g. 'sift')       
 %
 % OUT:  for each image, a matlab file *.file_ext is created in directory 
@@ -22,12 +22,14 @@ function detect_features_dsift(im_dir,file_ext,varargin)
     stride = 6;
     do_resizeimage = 1;
     
-    dd = dir(fullfile(im_dir,'*.jpg'));
+    dd = dir(fullfile(im_dir, strcat('*.', file_ext)));
     if nargin < 3
         scales = [32];
     else
         scales = cell2mat(varargin(1));
     end
+
+    tmp_img_filename = strcat('_tmp.', file_ext);
 
     parfor i = 1:length(dd)
     %for i = 1:length(dd)
@@ -45,7 +47,7 @@ function detect_features_dsift(im_dir,file_ext,varargin)
         if do_resizeimage
             I = rescale_max_size(I, 300, 1);
             tmp_img = fullfile(im_dir,dd(i).name);
-            tmp_img = [tmp_img(1:end-4),'_tmp.jpg'];
+            tmp_img = [tmp_img(1:end-4), tmp_img_filename];
             %tmp_img = [tmp_img(1:end-4),'.jpg'];
             %imwrite(I, tmp_img, 'jpg', 'quality', 90);
         end;
