@@ -26,6 +26,7 @@ clear;
 close all;
 
 % DATASET
+%dataset_dir = 'TrafficSigns';
 dataset_dir='4_ObjectCategories';
 %dataset_dir = '15_ObjectCategories';
 
@@ -39,7 +40,7 @@ desc_name = 'dsift';
 %desc_name = 'msdsift';
 
 % FLAGS
-do_feat_extraction = 0;
+do_feat_extraction = 1;
 do_split_sets = 0;
 
 do_form_codebook = 1;
@@ -65,6 +66,8 @@ wdir = pwd;
 libsvmpath = [ wdir(1:end-6) fullfile('lib','libsvm-3.11','matlab')];
 addpath(libsvmpath)
 
+datasetPath = strcat(basepath, '/', dataset_dir, '/');
+
 % BOW PARAMETERS
 max_km_iters = 50; % maximum number of iterations for k-means
 nfeat_codebook = 60000; % number of descriptors used by k-means for the codebook generation
@@ -79,13 +82,14 @@ nwords_codebook = 500;
 
 % image file extension
 file_ext='jpg';
+%file_ext = 'png';
 dotFile_ext = strcat('.', file_ext);
 
 % Create a new dataset split
 file_split = 'split.mat';
 if do_split_sets    
     data = create_dataset_split_structure(fullfile(basepath, 'img', ...
-        dataset_dir),num_train_img,num_test_img ,file_ext);
+        dataset_dir),num_train_img,num_test_img,file_ext);
     save(fullfile(basepath,'img',dataset_dir,file_split),'data');
 else
     load(fullfile(basepath,'img',dataset_dir,file_split));
@@ -94,7 +98,7 @@ classes = {data.classname}; % create cell array of class name strings
 
 % Extract SIFT features fon training and test images
 if do_feat_extraction   
-    extract_sift_features(fullfile('..','img',dataset_dir),desc_name)    
+    extract_sift_features(fullfile('..','img',dataset_dir),desc_name,file_ext)    
 end
 
 

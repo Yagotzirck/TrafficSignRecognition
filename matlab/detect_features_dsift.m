@@ -17,19 +17,19 @@
 %
 %
 
-function detect_features_dsift(im_dir,file_ext,varargin)
+function detect_features_dsift(im_dir,file_ext,img_ext,varargin)
     
     stride = 6;
     do_resizeimage = 1;
     
-    dd = dir(fullfile(im_dir, strcat('*.', file_ext)));
-    if nargin < 3
+    dd = dir(fullfile(im_dir, strcat('*.', img_ext)));
+    if nargin < 4 
         scales = [32];
     else
         scales = cell2mat(varargin(1));
     end
 
-    tmp_img_filename = strcat('_tmp.', file_ext);
+    tmp_img_filename = strcat('_tmp.', img_ext);
 
     parfor i = 1:length(dd)
     %for i = 1:length(dd)

@@ -15,11 +15,11 @@
 %
 %
 
-function detect_features_gist(im_dir,file_ext,varargin)
+function detect_features_gist(im_dir,file_ext,img_ext,varargin)
 
     
 	
-    dd = dir([im_dir, strcat('/*.', file_ext)]);
+    dd = dir([im_dir, strcat('/*.', img_ext)]);
 
     for i = 1:length(dd)
         fname = [im_dir,'/',dd(i).name];  

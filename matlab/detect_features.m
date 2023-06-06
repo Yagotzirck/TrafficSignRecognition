@@ -18,9 +18,9 @@
 %
 % Modified by Lamberto Ballan - 2/9/2013
 
-function [] = detect_features(im_dir,file_ext,show_img)
+function [] = detect_features(im_dir,file_ext,img_ext,show_img)
         
-    dd = dir(fullfile(im_dir, strcat('*.', file_ext)));
+    dd = dir(fullfile(im_dir, strcat('*.', img_ext)));
     if ~exist('show_img','var')
         show_img = false;
     end    
