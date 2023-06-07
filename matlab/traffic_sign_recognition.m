@@ -26,8 +26,8 @@ clear;
 close all;
 
 % DATASET
-%dataset_dir = 'TrafficSigns';
-dataset_dir='4_ObjectCategories';
+dataset_dir = 'TrafficSigns';
+%dataset_dir='4_ObjectCategories';
 %dataset_dir = '15_ObjectCategories';
 
 % FEATURES extraction methods
@@ -40,15 +40,15 @@ desc_name = 'dsift';
 %desc_name = 'msdsift';
 
 % FLAGS
-do_feat_extraction = 1;
-do_split_sets = 0;
+do_feat_extraction = 0;
+do_split_sets = 1;
 
 do_form_codebook = 1;
 do_feat_quantization = 1;
 
-do_L2_NN_classification = 1;
-do_chi2_NN_classification = 0;
-do_svm_linar_classification = 1;
+do_L2_NN_classification = 0;
+do_chi2_NN_classification = 1;
+do_svm_linar_classification = 0;
 do_svm_llc_linar_classification = 0;
 do_svm_precomp_linear_classification = 0;
 do_svm_inter_classification = 0;
@@ -73,6 +73,14 @@ max_km_iters = 50; % maximum number of iterations for k-means
 nfeat_codebook = 60000; % number of descriptors used by k-means for the codebook generation
 norm_bof_hist = 1;
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NOTE: In order to use the full dataset, assign "intmax" to both variables
+% below, e.g.:
+% num_train_img = intmax;
+% num_test_img = intmax;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % number of images selected for training (e.g. 30 for Caltech-101)
 num_train_img = 30;
 % number of images selected for test (e.g. 50 for Caltech-101)
@@ -81,15 +89,16 @@ num_test_img = 50;
 nwords_codebook = 500;
 
 % image file extension
-file_ext='jpg';
-%file_ext = 'png';
+%file_ext='jpg';
+file_ext = 'png';
 dotFile_ext = strcat('.', file_ext);
 
 % Create a new dataset split
 file_split = 'split.mat';
 if do_split_sets    
-    data = create_dataset_split_structure(fullfile(basepath, 'img', ...
-        dataset_dir),num_train_img,num_test_img,file_ext);
+    data = create_trafficSigns_dataset_split_structure( ...
+        fullfile(basepath, 'img', dataset_dir), ...
+        num_train_img,num_test_img,file_ext);
     save(fullfile(basepath,'img',dataset_dir,file_split),'data');
 else
     load(fullfile(basepath,'img',dataset_dir,file_split));
@@ -98,7 +107,10 @@ classes = {data.classname}; % create cell array of class name strings
 
 % Extract SIFT features fon training and test images
 if do_feat_extraction   
-    extract_sift_features(fullfile('..','img',dataset_dir),desc_name,file_ext)    
+    extract_sift_features(fullfile('..','img',dataset_dir),desc_name,file_ext)
+
+    % Extract features from subfolders in the "Train/" folder as well
+    extract_sift_features(fullfile('..','img', strcat(dataset_dir, '/Train') ),desc_name,file_ext)
 end
 
 
@@ -122,7 +134,7 @@ lasti=1;
 for i = 1:length(data)
      images_descs = get_descriptors_files(data,i,file_ext,desc_name,'train');
      for j = 1:length(images_descs) 
-        fname = fullfile(basepath,'img',dataset_dir,data(i).classname,images_descs{j});
+        fname = fullfile(basepath,'img',dataset_dir,images_descs{j});
         fprintf('Loading %s \n',fname);
         tmp = load(fname,'-mat');
         tmp.desc.class=i;
@@ -158,7 +170,7 @@ lasti=1;
 for i = 1:length(data)
      images_descs = get_descriptors_files(data,i,file_ext,desc_name,'test');
      for j = 1:length(images_descs) 
-        fname = fullfile(basepath,'img',dataset_dir,data(i).classname,images_descs{j});
+        fname = fullfile(basepath,'img',dataset_dir,images_descs{j});
         fprintf('Loading %s \n',fname);
         tmp = load(fname,'-mat');
         tmp.desc.class=i;
