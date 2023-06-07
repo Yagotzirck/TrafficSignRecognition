@@ -11,11 +11,11 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
 %   totalNumTrainImgs = height(trainData);
 %   totalNumTestImgs  = height(testData);
 
-    numClasses = max(trainData.('ClassId'));
+    numClasses = max(trainData.('ClassId')) + 1;
     
     for c = 1:numClasses
-        currClassTrainImgs = trainData( trainData.ClassId == c, : );
-        currClassTestImgs  = testData( testData.ClassId == c, : );
+        currClassTrainImgs = trainData( trainData.ClassId == (c-1), : );
+        currClassTestImgs  = testData( testData.ClassId == (c-1), : );
 
         numCurrTrainImgs = height(currClassTrainImgs);
         numCurrTestImgs = height(currClassTestImgs);
@@ -27,7 +27,7 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
         ids_test = randperm(numCurrTestImgs);
 
         data(c).n_images = numCurrTrainImgs + numCurrTestImgs;
-        data(c).classname = int2str(c);
+        data(c).classname = int2str(c-1);
         data(c).files = [currClassTrainImgs.('Path')', currClassTestImgs.('Path')'];
         
         data(c).train_id = false(1,data(c).n_images);
