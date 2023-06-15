@@ -17,8 +17,8 @@ for i=1:length(d)
         % MULTI-SCALE DENSE SIFT
         scales = [16 24 32 48];
         detect_features_dsift(fullfile(dirname,d(i).name),file_ext,img_ext,scales);
-    elseif strcmp(file_ext,'sift')
-        % SPARSE SIFT
+    elseif strcmp(file_ext,'sift') || strcmp(file_ext,'csift')
+        % SPARSE SIFT or SPARSE COLOR SIFT
         detect_features(fullfile(dirname,d(i).name),file_ext,img_ext);
     end
 end

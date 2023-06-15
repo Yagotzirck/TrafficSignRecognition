@@ -30,18 +30,27 @@ dataset_dir = 'TrafficSigns';
 %dataset_dir='4_ObjectCategories';
 %dataset_dir = '15_ObjectCategories';
 
-% FEATURES extraction methods
+% FEATURES extraction methods:
+%
 % 'sift' for sparse features detection (SIFT descriptors computed at  
-% Harris-Laplace keypoints) or 'dsift' for dense features detection (SIFT
-% descriptors computed at a grid of overlapped patches
+% Harris-Laplace keypoints)
+% 
+% 'csift' for sparse features detection, taking into account color as well
+% and not just brightness (basically the same as 'sift', but computing it 3
+% times for the red, blue and green channels and concatenating the results)
+
+% 'dsift' for dense features detection (SIFT
+% descriptors computed at a grid of overlapped patches)
 
 %desc_name = 'sift';
-desc_name = 'dsift';
+desc_name = 'csift';
+%desc_name = 'dsift';
 %desc_name = 'msdsift';
 
 % FLAGS
-do_feat_extraction = 0;
+do_feat_extraction = 1;
 do_split_sets = 1;
+
 
 do_form_codebook = 1;
 do_feat_quantization = 1;
@@ -75,14 +84,14 @@ norm_bof_hist = 1;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% NOTE: In order to use the full dataset, assign "intmax" to both variables
+% NOTE: In order to use the full dataset, assign "double(intmax)" to both variables
 % below, e.g.:
-% num_train_img = intmax;
-% num_test_img = intmax;
+% num_train_img = double(intmax);
+% num_test_img = double(intmax);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % number of images selected for training (e.g. 30 for Caltech-101)
-num_train_img = 30;
+num_train_img = 210;
 % number of images selected for test (e.g. 50 for Caltech-101)
 num_test_img = 50;
 % number of codewords (i.e. K for the k-means algorithm)
