@@ -12,7 +12,7 @@
 %  desc.c    ... column index of each feature
 %  desc.rad  ... radius (scale) of each feature
 %  desc.sift ... 128d SIFT descriptor for each feature (if file_ext == 'sift')
-%  desc.csift ... 384d COLOR SIFT descriptor for each feature (if file_ext == 'csift')
+%  desc.csift ... 128d COLOR SIFT descriptor for each feature (if file_ext == 'csift')
 %
 % Josef.Sivic@ens.fr
 % 7/11/2009
@@ -68,12 +68,13 @@ function [] = detect_features(im_dir,file_ext,img_ext,show_img)
             rad =       [];     % Radiuses
 
             for currColorChannel = 1:ndims(Im)  % ndims(Im) should normally be 3: red, green, blue
+                imgCurrChannel = im2double( Im(:,:,currColorChannel) );
                  % compute features (LoG)
-                [curr_r, curr_c, curr_rad] = BlobDetector(Im(:,:,currColorChannel), sigma, k, sigma_final, threshold);
+                [curr_r, curr_c, curr_rad] = BlobDetector(imgCurrChannel, sigma, k, sigma_final, threshold);
     
                 % describe features
                 curr_circles = [curr_c curr_r curr_rad];
-                curr_sift_arr = find_sift(Im(:,:,currColorChannel), curr_circles, enlarge_factor);
+                curr_sift_arr = find_sift(imgCurrChannel, curr_circles, enlarge_factor);
 
                 % Concatenate the current color channel attributes to
                 % attributes from previous channels
