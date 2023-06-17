@@ -22,8 +22,8 @@
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-clear;
-close all;
+%clear;
+%close all;
 
 % DATASET
 dataset_dir = 'TrafficSigns';
@@ -42,15 +42,16 @@ dataset_dir = 'TrafficSigns';
 % 'dsift' for dense features detection (SIFT
 % descriptors computed at a grid of overlapped patches)
 
-%desc_name = 'sift';
-desc_name = 'csift';
+desc_name = 'sift';
+%desc_name = 'csift';
 %desc_name = 'dsift';
 %desc_name = 'msdsift';
 
 % FLAGS
-do_feat_extraction = 1;
-do_split_sets = 1;
+do_feat_extraction = 0;
+do_split_sets = 0;
 
+recumpute_sift = not(evalin( 'base', 'exist(''desc_train'',''var'') == 1'));
 
 do_form_codebook = 1;
 do_feat_quantization = 1;
@@ -139,18 +140,20 @@ end
 %  desc(i).sift : Nx128 array with N SIFT descriptors
 %  desc(i).imgfname : file name of original image
 
-lasti=1;
-for i = 1:length(data)
-     images_descs = get_descriptors_files(data,i,file_ext,desc_name,'train');
-     for j = 1:length(images_descs) 
-        fname = fullfile(basepath,'img',dataset_dir,images_descs{j});
-        fprintf('Loading %s \n',fname);
-        tmp = load(fname,'-mat');
-        tmp.desc.class=i;
-        tmp.desc.imgfname=regexprep(fname,['.' desc_name], dotFile_ext);
-        desc_train(lasti)=tmp.desc;
-        desc_train(lasti).sift = single(desc_train(lasti).sift);
-        lasti=lasti+1;
+if(recumpute_sift)
+    lasti=1;
+    for i = 1:length(data)
+         images_descs = get_descriptors_files(data,i,file_ext,desc_name,'train');
+         for j = 1:length(images_descs) 
+            fname = fullfile(basepath,'img',dataset_dir,images_descs{j});
+            fprintf('Loading %s \n',fname);
+            tmp = load(fname,'-mat');
+            tmp.desc.class=i;
+            tmp.desc.imgfname=regexprep(fname,['.' desc_name], dotFile_ext);
+            desc_train(lasti)=tmp.desc;
+            desc_train(lasti).sift = single(desc_train(lasti).sift);
+            lasti=lasti+1;
+        end;
     end;
 end;
 
@@ -174,19 +177,20 @@ end
 
 
 %% Load pre-computed SIFT features for test images 
-
-lasti=1;
-for i = 1:length(data)
-     images_descs = get_descriptors_files(data,i,file_ext,desc_name,'test');
-     for j = 1:length(images_descs) 
-        fname = fullfile(basepath,'img',dataset_dir,images_descs{j});
-        fprintf('Loading %s \n',fname);
-        tmp = load(fname,'-mat');
-        tmp.desc.class=i;
-        tmp.desc.imgfname=regexprep(fname,['.' desc_name], dotFile_ext);
-        desc_test(lasti)=tmp.desc;
-        desc_test(lasti).sift = single(desc_test(lasti).sift);
-        lasti=lasti+1;
+if(recumpute_sift)
+    lasti=1;
+    for i = 1:length(data)
+         images_descs = get_descriptors_files(data,i,file_ext,desc_name,'test');
+         for j = 1:length(images_descs) 
+            fname = fullfile(basepath,'img',dataset_dir,images_descs{j});
+            fprintf('Loading %s \n',fname);
+            tmp = load(fname,'-mat');
+            tmp.desc.class=i;
+            tmp.desc.imgfname=regexprep(fname,['.' desc_name], dotFile_ext);
+            desc_test(lasti)=tmp.desc;
+            desc_test(lasti).sift = single(desc_test(lasti).sift);
+            lasti=lasti+1;
+        end;
     end;
 end;
 
@@ -451,7 +455,7 @@ if do_chi2_NN_classification
     end
 
     % Nearest neighbor classification (1-NN) using Chi2 distance
-    [mv,mi] = min(bof_chi2dist,[],2);
+    [mv,mi] = mink(bof_chi2dist,5,2);
     bof_chi2lab = labels_train(mi);
 
     method_name='NN Chi-2';
