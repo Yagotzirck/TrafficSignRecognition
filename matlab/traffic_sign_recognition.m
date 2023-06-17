@@ -455,8 +455,75 @@ if do_chi2_NN_classification
     end
 
     % Nearest neighbor classification (1-NN) using Chi2 distance
-    [mv,mi] = mink(bof_chi2dist,5,2);
-    bof_chi2lab = labels_train(mi);
+    k = 5; % Numero di immagini più simili da considerare
+    [mv,mi] = mink(bof_chi2dist, k, 2);
+
+    numImages = size(mi,1); % Numero totale di immagini
+    maxIterations = 100; % Numero massimo di iterazioni per RANSAC
+    distanceThreshold = 10; % Soglia di distanza per considerare un'immagine un inlier
+        
+    bestImageIndices = zeros(numImages, 1); % Inizializza l'array per salvare l'indice migliore
+
+    for i = 1:numImages
+        % Seleziona le k immagini più simili per la riga corrente
+        imageIndices = mi(i, 1:k);
+        
+        % Esegui l'algoritmo RANSAC per trovare la migliore immagine
+        bestInlierCount = 0;
+        bestImageIndex = 1;
+        
+        for j = 1:k
+            % Seleziona l'immagine corrente dalla lista delle k immagini più simili
+            imageIndex = imageIndices(j);
+            
+            % Verifica se l'immagine corrente ha abbastanza caratteristiche SIFT
+            if size(desc_test(i).sift, 2) >= 2 && size(desc_train(imageIndex).sift, 2) >= 2
+                % Esegui l'algoritmo RANSAC per l'immagine corrente
+                inlierCount = 0;
+                
+                for iteration = 1:maxIterations
+                    % Seleziona casualmente due caratteristiche SIFT dall'immagine corrente
+                    featureIndices = randi(size(desc_test(i).sift,1));
+                    currDesc = desc_test(i).sift(featureIndices(1), :);
+                    currNorm = norm(currDesc);
+                    feature1 = currDesc ./ currNorm;    % Normalize descriptor                   
+                    
+                    % Seleziona casualmente una caratteristica SIFT dall'immagine selezionata
+                    featureIndices = randi(size(desc_train(imageIndex).sift,1));
+                    currDesc = desc_train(imageIndex).sift(featureIndices(1), :);
+                    currNorm = norm(currDesc);
+                    feature2 = currDesc ./ currNorm;    % Normalize descriptor    
+                    
+                    % Normalizza le dimensioni delle caratteristiche SIFT
+                    % per poter calcolare la distanza euclidea
+                    %if size(feature1, 1) > size(feature2, 1)
+                   %     feature1 = feature1(1:size(feature2, 1), :);
+                    %elseif size(feature2, 1) > size(feature1, 1)
+                    %    feature2 = feature2(1:size(feature1, 1), :);
+                   % end
+
+                    % Calcola la distanza tra le due caratteristiche
+                    distance = sqrt(sum((feature1 - feature2).^2));
+                        
+                    % Se la distanza è inferiore alla soglia di distanza, considera le due caratteristiche come inliers
+                    if distance < distanceThreshold
+                        inlierCount = inlierCount + 1;
+                    end
+                end
+                
+                % Aggiorna se necessario il numero di inliers e l'immagine migliore
+                if inlierCount > bestInlierCount
+                    bestInlierCount = inlierCount;
+                    bestImageIndex = imageIndex;
+                end
+            end
+        end
+        
+        % Salva l'immagine migliore ottenuta da RANSAC
+        bestImageIndices(i) = mi(i, bestImageIndex);
+    end
+
+    bof_chi2lab = labels_train(bestImageIndices);
 
     method_name='NN Chi-2';
     acc=sum(bof_chi2lab==labels_test)/length(labels_test);
