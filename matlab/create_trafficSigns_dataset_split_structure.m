@@ -1,4 +1,4 @@
-function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntest,file_ext)
+function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntest,use_cropped_train_imgs)
 %CREATE_TRAFFICSIGNS_DATASET_SPLIT_STRUCTURE Function
 %create_dataset_split_structure(), readapted to deal with the traffic signs
 %dataset.
@@ -36,5 +36,11 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
         data(c).test_id = false(1,data(c).n_images);
         data(c).test_id(ids_test(1:currNtest) + currNtrain)=true;
     end
-   
+
+    if use_cropped_train_imgs
+        for i = 1:numClasses
+            data(i).files(data(i).train_id) = strcat('cropped', data(i).files(data(i).train_id));
+        end
+    end
+
 end

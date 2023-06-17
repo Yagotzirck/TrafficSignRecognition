@@ -56,16 +56,24 @@ reload_sift = ...
     do_split_sets == 1      || ...
     not(evalin( 'base', 'exist(''desc_train'',''var'') == 1'));
 
+
+% If true, use the boxes enclosing the traffic signs defined in the
+% datasets's csv files to crop the images
+crop_imgs = 0;
+
+% If true, use the cropped images for the training set
+use_cropped_train_imgs = 1;
+
 do_form_codebook = 1;
 do_feat_quantization = 1;
 
-do_L2_NN_classification = 0;
+do_L2_NN_classification = 1;
 do_chi2_NN_classification = 1;
-do_svm_linar_classification = 0;
+do_svm_linar_classification = 1;
 do_svm_llc_linar_classification = 0;
-do_svm_precomp_linear_classification = 0;
-do_svm_inter_classification = 0;
-do_svm_chi2_classification = 0;
+do_svm_precomp_linear_classification = 1;
+do_svm_inter_classification = 1;
+do_svm_chi2_classification = 1;
 
 visualize_feat = 0;
 visualize_words = 0;
@@ -79,7 +87,6 @@ wdir = pwd;
 libsvmpath = [ wdir(1:end-6) fullfile('lib','libsvm-3.11','matlab')];
 addpath(libsvmpath)
 
-datasetPath = strcat(basepath, '/', dataset_dir, '/');
 
 % BOW PARAMETERS
 max_km_iters = 50; % maximum number of iterations for k-means
@@ -106,12 +113,16 @@ nwords_codebook = 500;
 file_ext = 'png';
 dotFile_ext = strcat('.', file_ext);
 
+if crop_imgs
+    crop_traffic_signs( fullfile(basepath, 'img', dataset_dir), file_ext );
+end
+
 % Create a new dataset split
 file_split = 'split.mat';
 if do_split_sets    
     data = create_trafficSigns_dataset_split_structure( ...
         fullfile(basepath, 'img', dataset_dir), ...
-        num_train_img,num_test_img,file_ext);
+        num_train_img,num_test_img,use_cropped_train_imgs);
     save(fullfile(basepath,'img',dataset_dir,file_split),'data');
 else
     load(fullfile(basepath,'img',dataset_dir,file_split));
@@ -124,6 +135,8 @@ if do_feat_extraction
 
     % Extract features from subfolders in the "Train/" folder as well
     extract_sift_features(fullfile('..','img', strcat(dataset_dir, '/Train') ),desc_name,file_ext)
+    % Extract features from subfolders in the "croppedTrain/" folder as well
+    extract_sift_features(fullfile('..','img', strcat(dataset_dir, '/croppedTrain') ),desc_name,file_ext)
 end
 
 
