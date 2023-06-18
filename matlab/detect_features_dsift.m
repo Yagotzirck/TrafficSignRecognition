@@ -76,6 +76,8 @@ function detect_features_dsift(im_dir,file_ext,img_ext,varargin)
         desc = struct('sift',uint8(512*sift),'r',r,'c',c,'rad',rad);
 
         iSave(desc,fname_out);
+
+        clear rad; % Otherwise it stays for the next loop iteration, if we use "for" instead of "parfor"
     end
 
 end
