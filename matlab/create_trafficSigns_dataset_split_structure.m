@@ -24,7 +24,7 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
         currNtest  = min(Ntest, numCurrTestImgs);
 
         ids_train = randperm(numCurrTrainImgs);
-        ids_test = randperm(numCurrTestImgs);
+        ids_test = randperm(numCurrTestImgs) + numCurrTrainImgs;
 
         data(c).n_images = numCurrTrainImgs + numCurrTestImgs;
         data(c).classname = int2str(c-1);
@@ -34,7 +34,7 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
         data(c).train_id(ids_train(1:currNtrain))=true;
         
         data(c).test_id = false(1,data(c).n_images);
-        data(c).test_id(ids_test(1:currNtest) + currNtrain)=true;
+        data(c).test_id(ids_test(1:currNtest))=true;
     end
 
     if use_cropped_train_imgs
