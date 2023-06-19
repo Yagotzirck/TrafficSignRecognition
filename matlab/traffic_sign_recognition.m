@@ -22,8 +22,8 @@
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%clear;
-%close all;
+clear;
+close all;
 
 % DATASET
 dataset_dir = 'TrafficSigns';
@@ -49,12 +49,13 @@ desc_name = 'sift';
 
 % FLAGS
 do_feat_extraction = 0;
-do_split_sets = 0;
+do_split_sets = 1;
 
-reload_sift = ...
-    do_feat_extraction == 1 || ...
-    do_split_sets == 1      || ...
-    not(evalin( 'base', 'exist(''desc_train'',''var'') == 1'));
+reload_sift = 1;
+% reload_sift = ...
+%     do_feat_extraction == 1 || ...
+%     do_split_sets == 1      || ...
+%     not(evalin( 'base', 'exist(''desc_train'',''var'') == 1'));
 
 
 % If true, use the boxes enclosing the traffic signs defined in the
@@ -63,6 +64,9 @@ crop_imgs = 0;
 
 % If true, use the cropped images for the training set
 use_cropped_train_imgs = 0;
+
+% If true, use RANSAC-kNN for NN-Chi2; if false, use 1NN-Chi2
+use_ransac = 0;
 
 do_form_codebook = 1;
 do_feat_quantization = 1;
@@ -416,23 +420,23 @@ labels_test=cat(1,desc_test.class);
 
 %% NN classification %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% if do_L2_NN_classification
-%     % Compute L2 distance between BOFs of test and training images
-%     bof_l2dist=eucliddist(bof_test,bof_train);
-%     
-%     % Nearest neighbor classification (1-NN) using L2 distance
-%     [mv,mi] = min(bof_l2dist,[],2);
-%     bof_l2lab = labels_train(mi);
-%     
-%     method_name='NN L2';
-%     acc=sum(bof_l2lab==labels_test)/length(labels_test);
-%     fprintf('\n*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name,acc*100);
-%    
-%     % Compute classification accuracy
-%     compute_accuracy(data,labels_test,bof_l2lab,classes,method_name,desc_test,...
-%                       visualize_confmat & have_screen,... 
-%                       visualize_res & have_screen);
-% end
+if do_L2_NN_classification
+    % Compute L2 distance between BOFs of test and training images
+    bof_l2dist=eucliddist(bof_test,bof_train);
+    
+    % Nearest neighbor classification (1-NN) using L2 distance
+    [mv,mi] = min(bof_l2dist,[],2);
+    bof_l2lab = labels_train(mi);
+    
+    method_name='NN L2';
+    acc=sum(bof_l2lab==labels_test)/length(labels_test);
+    fprintf('\n*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name,acc*100);
+   
+    % Compute classification accuracy
+    compute_accuracy(data,labels_test,bof_l2lab,classes,method_name,desc_test,...
+                      visualize_confmat & have_screen,... 
+                      visualize_res & have_screen);
+end
 
 
 
@@ -465,9 +469,9 @@ if do_chi2_NN_classification
 
     
 
-%%%%%%%%%%%%%%%%%%%%% Buggy part; disable it for now %%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%% Buggy part; must be fixed %%%%%%%%%%%%%%%%%%%%%%
 
-
+if use_ransac
     % Nearest neighbor classification (k-NN) using
     % Chi2 distance + homography + RANSAC
 
@@ -481,10 +485,15 @@ if do_chi2_NN_classification
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% END OF BUGGY PART %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+else
+    % Nearest neighbor classification (1-NN) using Chi2 distance
+    [mv,mi] = min(bof_chi2dist,[],2);
+    bof_chi2lab = labels_train(mi);
+end
+
     method_name='NN Chi-2';
 
-    %[mv,mi] = min(bof_chi2dist,[],2);
-    %bof_chi2lab = labels_train(mi);
+    
     acc=sum(bof_chi2lab==labels_test)/length(labels_test);
     fprintf('*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name,acc*100);
  
