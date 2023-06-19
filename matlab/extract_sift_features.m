@@ -8,6 +8,13 @@ function extract_sift_features(dirname, file_ext, img_ext)
 
 d = dir(dirname);
 d = d(3:end); %remove . and .. 
+
+% Get a logical vector that tells which is a directory.
+dirFlags = [d.isdir];
+% Extract only those that are directories.
+d = d(dirFlags); % A structure with extra info.
+
+
 for i=1:length(d)
     if strcmp(file_ext,'dsift')
         % DENSE SIFT

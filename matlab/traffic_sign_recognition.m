@@ -62,18 +62,18 @@ reload_sift = ...
 crop_imgs = 0;
 
 % If true, use the cropped images for the training set
-use_cropped_train_imgs = 1;
+use_cropped_train_imgs = 0;
 
 do_form_codebook = 1;
 do_feat_quantization = 1;
 
-do_L2_NN_classification = 1;
+do_L2_NN_classification = 0;
 do_chi2_NN_classification = 1;
-do_svm_linar_classification = 1;
+do_svm_linar_classification = 0;
 do_svm_llc_linar_classification = 0;
-do_svm_precomp_linear_classification = 1;
-do_svm_inter_classification = 1;
-do_svm_chi2_classification = 1;
+do_svm_precomp_linear_classification = 0;
+do_svm_inter_classification = 0;
+do_svm_chi2_classification = 0;
 
 visualize_feat = 0;
 visualize_words = 0;
@@ -93,13 +93,6 @@ max_km_iters = 50; % maximum number of iterations for k-means
 nfeat_codebook = 60000; % number of descriptors used by k-means for the codebook generation
 norm_bof_hist = 1;
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% NOTE: In order to use the full dataset, assign "double(intmax)" to both variables
-% below, e.g.:
-% num_train_img = double(intmax);
-% num_test_img = double(intmax);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % number of images selected for training (e.g. 30 for Caltech-101)
 num_train_img = 210;
@@ -423,23 +416,23 @@ labels_test=cat(1,desc_test.class);
 
 %% NN classification %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if do_L2_NN_classification
-    % Compute L2 distance between BOFs of test and training images
-    bof_l2dist=eucliddist(bof_test,bof_train);
-    
-    % Nearest neighbor classification (1-NN) using L2 distance
-    [mv,mi] = min(bof_l2dist,[],2);
-    bof_l2lab = labels_train(mi);
-    
-    method_name='NN L2';
-    acc=sum(bof_l2lab==labels_test)/length(labels_test);
-    fprintf('\n*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name,acc*100);
-   
-    % Compute classification accuracy
-    compute_accuracy(data,labels_test,bof_l2lab,classes,method_name,desc_test,...
-                      visualize_confmat & have_screen,... 
-                      visualize_res & have_screen);
-end
+% if do_L2_NN_classification
+%     % Compute L2 distance between BOFs of test and training images
+%     bof_l2dist=eucliddist(bof_test,bof_train);
+%     
+%     % Nearest neighbor classification (1-NN) using L2 distance
+%     [mv,mi] = min(bof_l2dist,[],2);
+%     bof_l2lab = labels_train(mi);
+%     
+%     method_name='NN L2';
+%     acc=sum(bof_l2lab==labels_test)/length(labels_test);
+%     fprintf('\n*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name,acc*100);
+%    
+%     % Compute classification accuracy
+%     compute_accuracy(data,labels_test,bof_l2lab,classes,method_name,desc_test,...
+%                       visualize_confmat & have_screen,... 
+%                       visualize_res & have_screen);
+% end
 
 
 
@@ -475,84 +468,23 @@ if do_chi2_NN_classification
 %%%%%%%%%%%%%%%%%%%%% Buggy part; disable it for now %%%%%%%%%%%%%%%%%%%%%%
 
 
-%     % Nearest neighbor classification (1-NN) using Chi2 distance
-%     k = 5; % Numero di immagini più simili da considerare
-%     [mv,mi] = mink(bof_chi2dist, k, 2);
-% 
-%     numImages = size(mi,1); % Numero totale di immagini
-%     maxIterations = 100; % Numero massimo di iterazioni per RANSAC
-%     distanceThreshold = 10; % Soglia di distanza per considerare un'immagine un inlier
-%         
-%     bestImageIndices = zeros(numImages, 1); % Inizializza l'array per salvare l'indice migliore
-% 
-%     for i = 1:numImages
-%         % Seleziona le k immagini più simili per la riga corrente
-%         imageIndices = mi(i, 1:k);
-%         
-%         % Esegui l'algoritmo RANSAC per trovare la migliore immagine
-%         bestInlierCount = 0;
-%         bestImageIndex = 1;
-%         
-%         for j = 1:k
-%             % Seleziona l'immagine corrente dalla lista delle k immagini più simili
-%             imageIndex = imageIndices(j);
-%             
-%             % Verifica se l'immagine corrente ha abbastanza caratteristiche SIFT
-%             if size(desc_test(i).sift, 2) >= 2 && size(desc_train(imageIndex).sift, 2) >= 2
-%                 % Esegui l'algoritmo RANSAC per l'immagine corrente
-%                 inlierCount = 0;
-%                 
-%                 for iteration = 1:maxIterations
-%                     % Seleziona casualmente due caratteristiche SIFT dall'immagine corrente
-%                     featureIndices = randi(size(desc_test(i).sift,1));
-%                     currDesc = desc_test(i).sift(featureIndices(1), :);
-%                     currNorm = norm(currDesc);
-%                     feature1 = currDesc ./ currNorm;    % Normalize descriptor                   
-%                     
-%                     % Seleziona casualmente una caratteristica SIFT dall'immagine selezionata
-%                     featureIndices = randi(size(desc_train(imageIndex).sift,1));
-%                     currDesc = desc_train(imageIndex).sift(featureIndices(1), :);
-%                     currNorm = norm(currDesc);
-%                     feature2 = currDesc ./ currNorm;    % Normalize descriptor    
-%                     
-%                     % Normalizza le dimensioni delle caratteristiche SIFT
-%                     % per poter calcolare la distanza euclidea
-%                     %if size(feature1, 1) > size(feature2, 1)
-%                    %     feature1 = feature1(1:size(feature2, 1), :);
-%                     %elseif size(feature2, 1) > size(feature1, 1)
-%                     %    feature2 = feature2(1:size(feature1, 1), :);
-%                    % end
-% 
-%                     % Calcola la distanza tra le due caratteristiche
-%                     distance = sqrt(sum((feature1 - feature2).^2));
-%                         
-%                     % Se la distanza è inferiore alla soglia di distanza, considera le due caratteristiche come inliers
-%                     if distance < distanceThreshold
-%                         inlierCount = inlierCount + 1;
-%                     end
-%                 end
-%                 
-%                 % Aggiorna se necessario il numero di inliers e l'immagine migliore
-%                 if inlierCount > bestInlierCount
-%                     bestInlierCount = inlierCount;
-%                     bestImageIndex = imageIndex;
-%                 end
-%             end
-%         end
-%         
-%         % Salva l'immagine migliore ottenuta da RANSAC
-%         bestImageIndices(i) = mi(i, bestImageIndex);
-%     end
-% 
-%     bof_chi2lab = labels_train(bestImageIndices);
+    % Nearest neighbor classification (k-NN) using
+    % Chi2 distance + homography + RANSAC
+
+    k = 5; % Numero di immagini più simili da considerare
+
+    bestImageIndices = find_best_match(desc_train, desc_test, bof_chi2dist, k);
+
+    bof_chi2lab = labels_train(bestImageIndices);
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% END OF BUGGY PART %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     method_name='NN Chi-2';
 
-    [mv,mi] = min(bof_chi2dist,[],2);
-    bof_chi2lab = labels_train(mi);
+    %[mv,mi] = min(bof_chi2dist,[],2);
+    %bof_chi2lab = labels_train(mi);
     acc=sum(bof_chi2lab==labels_test)/length(labels_test);
     fprintf('*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name,acc*100);
  
