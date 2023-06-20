@@ -42,13 +42,13 @@ dataset_dir = 'TrafficSigns';
 % 'dsift' for dense features detection (SIFT
 % descriptors computed at a grid of overlapped patches)
 
-desc_name = 'sift';
+%desc_name = 'sift';
 %desc_name = 'csift';
-%desc_name = 'dsift';
+desc_name = 'dsift';
 %desc_name = 'msdsift';
 
 % FLAGS
-do_feat_extraction = 0;
+do_feat_extraction = 1;
 do_split_sets = 1;
 
 reload_sift = 1;
@@ -62,8 +62,14 @@ reload_sift = 1;
 % datasets's csv files to crop the images
 crop_imgs = 0;
 
-% If true, use the cropped images for the training set
-use_cropped_train_imgs = 0;
+
+% If true, resize the cropped images all to the same width and height
+% (defined as parameters inside resize_traffic_signs.m).
+resize_cropped_imgs = 0;
+
+% If true, use the resized cropped images
+use_resized_imgs = 1;
+
 
 % If true, use RANSAC-kNN for NN-Chi2; if false, use 1NN-Chi2
 use_ransac = 0;
@@ -114,12 +120,16 @@ if crop_imgs
     crop_traffic_signs( fullfile(basepath, 'img', dataset_dir), file_ext );
 end
 
+if resize_cropped_imgs
+    resize_traffic_signs( fullfile(basepath, 'img', dataset_dir), file_ext );
+end
+
 % Create a new dataset split
 file_split = 'split.mat';
 if do_split_sets    
     data = create_trafficSigns_dataset_split_structure( ...
         fullfile(basepath, 'img', dataset_dir), ...
-        num_train_img,num_test_img,use_cropped_train_imgs);
+        num_train_img,num_test_img,use_resized_imgs);
     save(fullfile(basepath,'img',dataset_dir,file_split),'data');
 else
     load(fullfile(basepath,'img',dataset_dir,file_split));
@@ -132,8 +142,8 @@ if do_feat_extraction
 
     % Extract features from subfolders in the "Train/" folder as well
     extract_sift_features(fullfile('..','img', strcat(dataset_dir, '/Train') ),desc_name,file_ext)
-    % Extract features from subfolders in the "croppedTrain/" folder as well
-    extract_sift_features(fullfile('..','img', strcat(dataset_dir, '/croppedTrain') ),desc_name,file_ext)
+    % Extract features from subfolders in the "resizedTrain/" folder as well
+    extract_sift_features(fullfile('..','img', strcat(dataset_dir, '/resizedTrain') ),desc_name,file_ext)
 end
 
 
