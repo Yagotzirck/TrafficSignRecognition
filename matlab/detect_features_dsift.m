@@ -59,6 +59,7 @@ function detect_features_dsift(im_dir,file_ext,img_ext,varargin)
         % scale
         %scales = [16 24 32 48];        
         sift_cell = cell(1,length(scales));
+        rad = cell(1,length(scales));
         for psize=1:length(scales);
             [sift_tmp,gx{psize},gy{psize}]=sp_dense_sift(I,stride,scales(psize));
             sift_cell{psize}=reshape(sift_tmp,[size(sift_tmp,1)*size(sift_tmp,2) size(sift_tmp,3)]);
@@ -77,7 +78,7 @@ function detect_features_dsift(im_dir,file_ext,img_ext,varargin)
 
         iSave(desc,fname_out);
 
-        clear rad; % Otherwise it stays for the next loop iteration, if we use "for" instead of "parfor"
+        %clear rad; % Otherwise it stays for the next loop iteration, if we use "for" instead of "parfor"
     end
 
 end
