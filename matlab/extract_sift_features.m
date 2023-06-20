@@ -18,7 +18,8 @@ d = d(dirFlags); % A structure with extra info.
 for i=1:length(d)
     if strcmp(file_ext,'dsift')
         % DENSE SIFT
-        scales = [32];
+        %scales = [32];
+        scales = [4];
         detect_features_dsift(fullfile(dirname,d(i).name),file_ext,img_ext,scales);
     elseif strcmp(file_ext,'msdsift')
         % MULTI-SCALE DENSE SIFT
