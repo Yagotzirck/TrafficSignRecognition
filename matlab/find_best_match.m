@@ -9,7 +9,7 @@ function bestImageIndices = find_best_match(desc_train, desc_test, bof_chi2dist,
 %   common with the test image T becomes the new "best match".
 
 
-showMatches = true;
+showMatches = false;
 
 [~,mi] = mink(bof_chi2dist, k, 2);
 
