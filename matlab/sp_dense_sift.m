@@ -15,10 +15,6 @@ if(~exist('num_bins','var'))
 end
 
 
-I = double(I);
-I = mean(I,3);
-I = I /max(I(:));
-
 % parameters
 num_angles = 8;
 
