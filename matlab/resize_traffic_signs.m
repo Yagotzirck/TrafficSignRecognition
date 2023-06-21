@@ -7,8 +7,8 @@ fprintf('Resizing images...')
 croppedDirs_prefix = 'cropped';
 resizedDirs_prefix = 'resized';
 
-resizedWidth =  40;
-resizedHeight = 40;
+resizedWidth =  48;
+resizedHeight = 48;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%% Create directories which will contain the resized images %%%%%%%%%%%
