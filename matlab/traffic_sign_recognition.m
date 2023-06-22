@@ -42,15 +42,15 @@ dataset_dir = 'TrafficSigns';
 % 'dsift' for dense features detection (SIFT
 % descriptors computed at a grid of overlapped patches)
 
-%desc_name = 'sift';
+desc_name = 'sift';
 %desc_name = 'csift';
 %desc_name = 'dsift';
-desc_name = 'cdsift';
+%desc_name = 'cdsift';
 %desc_name = 'msdsift';
 
 % FLAGS
 do_feat_extraction = 0;
-do_split_sets = 1;
+do_split_sets = 0;
 
 reload_sift = 1;
 % reload_sift = ...
@@ -68,21 +68,25 @@ crop_imgs = 0;
 % (defined as parameters inside resize_traffic_signs.m).
 resize_cropped_imgs = 0;
 
-% If true, use the resized cropped images
-use_resized_imgs = 1;
+
+% If true, use the cropped images
+use_cropped_imgs = 1;
+
+% If true, use the resized cropped images (overrides use_cropped_imgs if true)
+use_resized_imgs = 0;
 
 
 % If true, use RANSAC-kNN for NN-Chi2; if false, use 1NN-Chi2
-use_ransac = 0;
+use_ransac = 1;
 
 do_form_codebook = 1;
 do_feat_quantization = 1;
 
 do_L2_NN_classification = 0;
 do_chi2_NN_classification = 0;
-do_svm_linar_classification = 1;
+do_svm_linar_classification = 0;
 do_svm_llc_linar_classification = 0;
-do_svm_precomp_linear_classification = 0;
+do_svm_precomp_linear_classification = 1;
 do_svm_inter_classification = 0;
 do_svm_chi2_classification = 0;
   
@@ -107,9 +111,9 @@ norm_bof_hist = 1;
 
 
 % number of images selected for training (e.g. 30 for Caltech-101)
-num_train_img = 210;
+num_train_img = 100;
 % number of images selected for test (e.g. 50 for Caltech-101)
-num_test_img = 50;
+num_test_img = 20;
 % number of codewords (i.e. K for the k-means algorithm)
 nwords_codebook = 500;
 
@@ -131,7 +135,7 @@ file_split = 'split.mat';
 if do_split_sets    
     data = create_trafficSigns_dataset_split_structure( ...
         fullfile(basepath, 'img', dataset_dir), ...
-        num_train_img,num_test_img,use_resized_imgs);
+        num_train_img,num_test_img,use_resized_imgs, use_cropped_imgs);
     save(fullfile(basepath,'img',dataset_dir,file_split),'data');
 else
     load(fullfile(basepath,'img',dataset_dir,file_split));
@@ -487,7 +491,7 @@ if use_ransac
     % Nearest neighbor classification (k-NN) using
     % Chi2 distance + homography + RANSAC
 
-    k = 5; % Numero di immagini più simili da considerare
+    k = 10; % Numero di immagini più simili da considerare
 
     bestImageIndices = find_best_match(desc_train, desc_test, bof_chi2dist, k);
 

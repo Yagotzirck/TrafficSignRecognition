@@ -1,4 +1,4 @@
-function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntest,use_resized_imgs)
+function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntest,use_resized_imgs, use_cropped_imgs)
 %CREATE_TRAFFICSIGNS_DATASET_SPLIT_STRUCTURE Function
 %create_dataset_split_structure(), readapted to deal with the traffic signs
 %dataset.
@@ -12,7 +12,7 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
 %   totalNumTestImgs  = height(testData);
 
 
-    minResolution = [64 64];
+    minResolution = [56 56];
 
     % Keep only the images satisfying the minResolution requirement
     trainData = trainData(check_resolution(trainData, minResolution),:);
@@ -60,7 +60,13 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
             data(i).files(data(i).train_id) = strcat('resized', data(i).files(data(i).train_id));
             data(i).files(data(i).test_id) = strcat('resized', data(i).files(data(i).test_id));
         end
+    elseif use_cropped_imgs
+        for i = 1:idx
+            data(i).files(data(i).train_id) = strcat('cropped', data(i).files(data(i).train_id));
+            data(i).files(data(i).test_id) = strcat('cropped', data(i).files(data(i).test_id));
+        end
     end
+
 end
 
 
