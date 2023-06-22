@@ -50,7 +50,7 @@ desc_name = 'sift';
 
 % FLAGS
 do_feat_extraction = 0;
-do_split_sets = 0;
+do_split_sets = 1;
 
 reload_sift = 1;
 % reload_sift = ...
@@ -70,10 +70,10 @@ resize_cropped_imgs = 0;
 
 
 % If true, use the cropped images
-use_cropped_imgs = 1;
+use_cropped_imgs = 0;
 
 % If true, use the resized cropped images (overrides use_cropped_imgs if true)
-use_resized_imgs = 0;
+use_resized_imgs = 1;
 
 
 % If true, use RANSAC-kNN for NN-Chi2; if false, use 1NN-Chi2
@@ -111,7 +111,7 @@ norm_bof_hist = 1;
 
 
 % number of images selected for training (e.g. 30 for Caltech-101)
-num_train_img = 100;
+num_train_img = 500;
 % number of images selected for test (e.g. 50 for Caltech-101)
 num_test_img = 20;
 % number of codewords (i.e. K for the k-means algorithm)
@@ -232,11 +232,12 @@ if do_form_codebook
     % concatenate all descriptors from all images into a n x d matrix 
     DESC = [];
     labels_train = cat(1,desc_train.class);
+    num_images_per_class = max(arrayfun(@(x) numel(desc_train(labels_train==x)), 1:length(data)));
     for i=1:length(data)
         desc_class = desc_train(labels_train==i);
-        randimages = randperm(num_train_img);
-        randimages =randimages(1:5);
-        DESC = vertcat(DESC,desc_class(randimages).sift);
+        randimages = randperm(min(num_images_per_class, numel(desc_class)));
+        randimages = randimages(1:5);
+        DESC = vertcat(DESC, desc_class(randimages).sift);
     end
 
     % sample random M (e.g. M=20,000) descriptors from all training descriptors
