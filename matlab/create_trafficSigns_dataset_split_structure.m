@@ -1,4 +1,4 @@
-function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntest,use_resized_imgs, use_cropped_imgs)
+function data = create_trafficSigns_dataset_split_structure(main_dir,percTrain,percValidation,percTest,use_resized_imgs, use_cropped_imgs)
 %CREATE_TRAFFICSIGNS_DATASET_SPLIT_STRUCTURE Function
 %create_dataset_split_structure(), readapted to deal with the traffic signs
 %dataset.
@@ -11,8 +11,11 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
 %   totalNumTrainImgs = height(trainData);
 %   totalNumTestImgs  = height(testData);
 
+    if percTrain + percValidation + percTest > 1
+        error('The sum of split test percentages must not exceed 1!');
+    end
 
-    minResolution = [56 56];
+    minResolution = [0 0];
 
     % Keep only the images satisfying the minResolution requirement
     trainData = trainData(check_resolution(trainData, minResolution),:);
@@ -26,29 +29,38 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
         currClassTrainImgs = trainData( trainData.ClassId == (c-1), : );
         currClassTestImgs  = testData( testData.ClassId == (c-1), : );
 
-        numCurrTrainImgs = height(currClassTrainImgs);
-        numCurrTestImgs = height(currClassTestImgs);
+        currClassImgs = [currClassTrainImgs; currClassTestImgs];
 
-        if numCurrTrainImgs < Ntrain || numCurrTestImgs < Ntest
-            continue;
-        end
+%         numCurrTrainImgs = height(currClassTrainImgs);
+%         numCurrTestImgs = height(currClassTestImgs);
+        numCurrClassImgs = height(currClassImgs);
+
+%         if numCurrTrainImgs < Ntrain || numCurrTestImgs < Ntest
+%             continue;
+%         end
 
 
-        currNtrain = min(Ntrain, numCurrTrainImgs);
-        currNtest  = min(Ntest, numCurrTestImgs);
 
-        ids_train = randperm(numCurrTrainImgs);
-        ids_test = randperm(numCurrTestImgs) + numCurrTrainImgs;
+        currNtrain = floor(percTrain * numCurrClassImgs);
+        currNValidation = floor(percValidation * numCurrClassImgs);
+        currNtest  = floor(percTest * numCurrClassImgs);
 
-        data(idx).n_images = numCurrTrainImgs + numCurrTestImgs;
+        currUsedClassImgs = currNtrain + currNValidation + currNtest;
+
+        ids = randperm(currUsedClassImgs);
+
+        data(idx).n_images = currUsedClassImgs;
         data(idx).classname = int2str(c-1);
         data(idx).files = [currClassTrainImgs.('Path')', currClassTestImgs.('Path')'];
         
-        data(idx).train_id = false(1,data(idx).n_images);
-        data(idx).train_id(ids_train(1:currNtrain))=true;
-        
-        data(idx).test_id = false(1,data(idx).n_images);
-        data(idx).test_id(ids_test(1:currNtest))=true;
+        data(idx).train_id = false(1,currUsedClassImgs);
+        data(idx).train_id(ids(1:currNtrain))=true;
+
+        data(idx).validation_id_saved = false(1,currUsedClassImgs);
+        data(idx).validation_id_saved(ids(currNtrain+1:currNtrain + currNValidation))=true;
+
+        data(idx).test_id_saved = false(1,currUsedClassImgs);
+        data(idx).test_id_saved(ids(currNtrain + currNValidation + 1:currUsedClassImgs))=true;
 
         idx = idx + 1;
     end
@@ -58,12 +70,14 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,Ntrain,Ntes
     if use_resized_imgs
         for i = 1:idx
             data(i).files(data(i).train_id) = strcat('resized', data(i).files(data(i).train_id));
-            data(i).files(data(i).test_id) = strcat('resized', data(i).files(data(i).test_id));
+            data(i).files(data(i).validation_id_saved) = strcat('resized', data(i).files(data(i).validation_id_saved));
+            data(i).files(data(i).test_id_saved) = strcat('resized', data(i).files(data(i).test_id_saved));
         end
     elseif use_cropped_imgs
         for i = 1:idx
             data(i).files(data(i).train_id) = strcat('cropped', data(i).files(data(i).train_id));
-            data(i).files(data(i).test_id) = strcat('cropped', data(i).files(data(i).test_id));
+            data(i).files(data(i).validation_id_saved) = strcat('cropped', data(i).files(data(i).validation_id_saved));
+            data(i).files(data(i).test_id_saved) = strcat('cropped', data(i).files(data(i).test_id_saved));
         end
     end
 

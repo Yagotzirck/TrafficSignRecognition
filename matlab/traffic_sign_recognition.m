@@ -50,7 +50,7 @@ desc_name = 'sift';
 
 % FLAGS
 do_feat_extraction = 0;
-do_split_sets = 1;
+do_split_sets = 0;
 
 reload_sift = 1;
 % reload_sift = ...
@@ -77,7 +77,10 @@ use_resized_imgs = 1;
 
 
 % If true, use RANSAC-kNN for NN-Chi2; if false, use 1NN-Chi2
-use_ransac = 1;
+use_ransac = 0;
+
+
+testIfTrueValidationIfFalse = false;
 
 do_form_codebook = 1;
 do_feat_quantization = 1;
@@ -110,10 +113,13 @@ nfeat_codebook = 60000; % number of descriptors used by k-means for the codebook
 norm_bof_hist = 1;
 
 
-% number of images selected for training (e.g. 30 for Caltech-101)
-num_train_img = 500;
-% number of images selected for test (e.g. 50 for Caltech-101)
-num_test_img = 20;
+% Percentage of images selected for training
+trainPerc = .05;
+% Percentage of images selected for validation
+validationPerc = .05;
+% Percentage of images selected for test
+testPerc = .05;
+
 % number of codewords (i.e. K for the k-means algorithm)
 nwords_codebook = 500;
 
@@ -135,12 +141,19 @@ file_split = 'split.mat';
 if do_split_sets    
     data = create_trafficSigns_dataset_split_structure( ...
         fullfile(basepath, 'img', dataset_dir), ...
-        num_train_img,num_test_img,use_resized_imgs, use_cropped_imgs);
+        trainPerc,validationPerc,testPerc,use_resized_imgs, use_cropped_imgs);
     save(fullfile(basepath,'img',dataset_dir,file_split),'data');
 else
     load(fullfile(basepath,'img',dataset_dir,file_split));
 end
 classes = {data.classname}; % create cell array of class name strings
+
+if testIfTrueValidationIfFalse
+    [data.test_id] = deal(data.test_id_saved);
+else
+    [data.test_id] = deal(data.validation_id_saved);
+end
+
 
 % Extract SIFT features fon training and test images
 if do_feat_extraction   
