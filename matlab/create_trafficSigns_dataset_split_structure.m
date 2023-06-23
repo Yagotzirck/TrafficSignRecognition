@@ -12,7 +12,7 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,percTrain,p
 %   totalNumTestImgs  = height(testData);
 
     if percTrain + percValidation + percTest > 1
-        error('The sum of split test percentages must not exceed 1!');
+        error('The sum of split sets' percentages must not exceed 1!');
     end
 
     minResolution = [0 0];
@@ -51,7 +51,7 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,percTrain,p
 
         data(idx).n_images = currUsedClassImgs;
         data(idx).classname = int2str(c-1);
-        data(idx).files = [currClassTrainImgs.('Path')', currClassTestImgs.('Path')'];
+        data(idx).files = currClassImgs.('Path')';
         
         data(idx).train_id = false(1,currUsedClassImgs);
         data(idx).train_id(ids(1:currNtrain))=true;
