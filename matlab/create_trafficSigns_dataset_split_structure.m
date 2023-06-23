@@ -12,7 +12,7 @@ function data = create_trafficSigns_dataset_split_structure(main_dir,percTrain,p
 %   totalNumTestImgs  = height(testData);
 
     if percTrain + percValidation + percTest > 1
-        error('The sum of split sets' percentages must not exceed 1!');
+        error("The sum of split sets' percentages must not exceed 1!");
     end
 
     minResolution = [0 0];
