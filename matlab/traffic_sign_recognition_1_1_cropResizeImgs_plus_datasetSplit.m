@@ -6,16 +6,20 @@ if resize_cropped_imgs
     resize_traffic_signs( fullfile(basepath, 'img', dataset_dir), file_ext );
 end
 
-% Create a new dataset split
+% Load the dataset split, or create a new one if it wasn't created already
 file_split = 'split.mat';
-if do_split_sets    
+path_file_split = fullfile(basepath,'img',dataset_dir,file_split);
+
+if isfile(path_file_split)
+    load(path_file_split);
+else
     data = create_trafficSigns_dataset_split_structure( ...
         fullfile(basepath, 'img', dataset_dir), ...
         trainPerc,validationPerc,testPerc,use_resized_imgs, use_cropped_imgs);
-    save(fullfile(basepath,'img',dataset_dir,file_split),'data');
-else
-    load(fullfile(basepath,'img',dataset_dir,file_split));
+    
+    save(path_file_split,'data');
 end
+
 classes = {data.classname}; % create cell array of class name strings
 
 if testIfTrueValidationIfFalse
@@ -23,3 +27,5 @@ if testIfTrueValidationIfFalse
 else
     [data.test_id] = deal(data.validation_id_saved);
 end
+
+clear path_file_split;

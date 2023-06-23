@@ -3,37 +3,46 @@
 if do_form_codebook
     fprintf('\nBuild visual vocabulary:\n');
 
-    % concatenate all descriptors from all images into a n x d matrix 
-    DESC = [];
-    labels_train = cat(1,desc_train.class);
-    num_images_per_class = max(arrayfun(@(x) numel(desc_train(labels_train==x)), 1:length(data)));
-    for i=1:length(data)
-        desc_class = desc_train(labels_train==i);
-        randimages = randperm(min(num_images_per_class, numel(desc_class)));
-        randimages = randimages(1:5);
-        DESC = vertcat(DESC, desc_class(randimages).sift);
+    file_visual_vocab = ['VC (visual vocabulary - clustering) - ', desc_name, '.mat'];
+    path_file_visual_vocab = fullfile(basepath,'img',dataset_dir,file_visual_vocab);
+    
+    if isfile(path_file_visual_vocab)
+        load(path_file_visual_vocab);
+    else
+        % concatenate all descriptors from all images into a n x d matrix 
+        DESC = [];
+        labels_train = cat(1,desc_train.class);
+        num_images_per_class = max(arrayfun(@(x) numel(desc_train(labels_train==x)), 1:length(data)));
+        for i=1:length(data)
+            desc_class = desc_train(labels_train==i);
+            randimages = randperm(min(num_images_per_class, numel(desc_class)));
+            randimages = randimages(1:5);
+            DESC = vertcat(DESC, desc_class(randimages).sift);
+        end
+    
+        % sample random M (e.g. M=20,000) descriptors from all training descriptors
+        r = randperm(size(DESC,1));
+        r = r(1:min(length(r),nfeat_codebook));
+    
+        DESC = DESC(r,:);
+    
+        % run k-means
+        K = nwords_codebook; % size of visual vocabulary
+        fprintf('running k-means clustering of %d points into %d clusters...\n',...
+            size(DESC,1),K)
+        % input matrix needs to be transposed as the k-means function expects 
+        % one point per column rather than per row
+    
+        % form options structure for clustering
+        cluster_options.maxiters = max_km_iters;
+        cluster_options.verbose  = 1;
+    
+        [VC] = kmeans_bo(double(DESC),K,max_km_iters);%visual codebook
+        VC = VC';%transpose for compatibility with following functions
+        clear DESC;
     end
-
-    % sample random M (e.g. M=20,000) descriptors from all training descriptors
-    r = randperm(size(DESC,1));
-    r = r(1:min(length(r),nfeat_codebook));
-
-    DESC = DESC(r,:);
-
-    % run k-means
-    K = nwords_codebook; % size of visual vocabulary
-    fprintf('running k-means clustering of %d points into %d clusters...\n',...
-        size(DESC,1),K)
-    % input matrix needs to be transposed as the k-means function expects 
-    % one point per column rather than per row
-
-    % form options structure for clustering
-    cluster_options.maxiters = max_km_iters;
-    cluster_options.verbose  = 1;
-
-    [VC] = kmeans_bo(double(DESC),K,max_km_iters);%visual codebook
-    VC = VC';%transpose for compatibility with following functions
-    clear DESC;
+        
+        save(path_file_visual_vocab,'VC');
 end
 
 
@@ -62,29 +71,45 @@ end
 %     [mv,visword]=min(dmat,[],2); if you compute dmat as 
 %     dmat=eucliddist(dscr(i).sift,VC);
 
+quantization_already_loaded_train = ...
+    isfield(desc_train, 'visword') && ...
+    isfield(desc_train, 'quantdist');
+
+quantization_already_loaded_test = ...
+    isfield(desc_test,  'visword') && ...
+    isfield(desc_test,  'quantdist');
+
+
+
 if do_feat_quantization
     fprintf('\nFeature quantization (hard-assignment)...\n');
-    for i=1:length(desc_train)  
-      sift = desc_train(i).sift(:,:);
-      dmat = eucliddist(sift,VC);
-      [quantdist,visword] = min(dmat,[],2); 
-      % save feature labels
-      desc_train(i).visword = visword;
-      desc_train(i).quantdist = quantdist;
+
+    if ~quantization_already_loaded_train
+        for i=1:length(desc_train)  
+          sift = desc_train(i).sift(:,:);
+          dmat = eucliddist(sift,VC);
+          [quantdist,visword] = min(dmat,[],2); 
+          % save feature labels
+          desc_train(i).visword = visword;
+          desc_train(i).quantdist = quantdist;
+        end
+
+        save(path_file_desc_train,'desc_train');
     end
 
-    for i=1:length(desc_test)    
-      sift = desc_test(i).sift(:,:); 
-      dmat = eucliddist(sift,VC);
-      [quantdist,visword] = min(dmat,[],2);
-      % save feature labels
-      desc_test(i).visword = visword;
-      desc_test(i).quantdist = quantdist;
+    if ~quantization_already_loaded_test
+        for i=1:length(desc_test)    
+          sift = desc_test(i).sift(:,:); 
+          dmat = eucliddist(sift,VC);
+          [quantdist,visword] = min(dmat,[],2);
+          % save feature labels
+          desc_test(i).visword = visword;
+          desc_test(i).quantdist = quantdist;
+        end
+
+        save(path_file_desc_test,'desc_test');
     end
 end
-
-
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -145,33 +170,49 @@ end
 %     Matlab function 'histc' to compute histograms.
 
 
+bof_already_loaded_train = isfield(desc_train, 'bof');
+bof_already_loaded_test  = isfield(desc_test,  'bof');
+
 N = size(VC,1); % number of visual words
 
-for i=1:length(desc_train) 
-    visword = desc_train(i).visword;
-    H = histc(visword,[1:nwords_codebook]);
-  
-    % normalize bow-hist (L1 norm)
-    if norm_bof_hist
-        H = H/sum(H);
+if ~bof_already_loaded_train
+    for i=1:length(desc_train) 
+        visword = desc_train(i).visword;
+        H = histc(visword,[1:nwords_codebook]);
+      
+        % normalize bow-hist (L1 norm)
+        if norm_bof_hist
+            H = H/sum(H);
+        end
+      
+        % save histograms
+        desc_train(i).bof=H(:)';
     end
-  
-    % save histograms
-    desc_train(i).bof=H(:)';
+end
+    
+if ~bof_already_loaded_test
+    for i=1:length(desc_test) 
+        visword = desc_test(i).visword;
+        H = histc(visword,[1:nwords_codebook]);
+      
+        % normalize bow-hist (L1 norm)
+        if norm_bof_hist
+            H = H/sum(H);
+        end
+      
+        % save histograms
+        desc_test(i).bof=H(:)';
+    end
 end
 
-for i=1:length(desc_test) 
-    visword = desc_test(i).visword;
-    H = histc(visword,[1:nwords_codebook]);
-  
-    % normalize bow-hist (L1 norm)
-    if norm_bof_hist
-        H = H/sum(H);
-    end
-  
-    % save histograms
-    desc_test(i).bof=H(:)';
-end
+clear file_desc_train;
+clear path_file_desc_train;
+
+clear file_desc_test;
+clear path_file_desc_test;
+
+clear N;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   End of EXERCISE 2                                                     %

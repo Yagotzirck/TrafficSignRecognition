@@ -37,8 +37,25 @@ labels_test=cat(1,desc_test.class);
 
 if do_L2_NN_classification
     % Compute L2 distance between BOFs of test and training images
-    bof_l2dist=eucliddist(bof_test,bof_train);
+
+    if testIfTrueValidationIfFalse
+        file_bof_l2dist = ['bof_l2dist (test) - ', desc_name, '.mat'];
+    else
+        file_bof_l2dist = ['bof_l2dist (validation) - ', desc_name, '.mat'];
+    end
+
+
+    path_file_bof_l2dist = fullfile(basepath,'img',dataset_dir,file_bof_l2dist);
     
+    if isfile(path_file_bof_l2dist)
+        load(path_file_bof_l2dist);
+    else
+        bof_l2dist=eucliddist(bof_test,bof_train);
+        save(path_file_bof_l2dist,'bof_l2dist');
+    end   
+
+
+
     % Nearest neighbor classification (1-NN) using L2 distance
     [mv,mi] = min(bof_l2dist,[],2);
     bof_l2lab = labels_train(mi);
@@ -76,13 +93,28 @@ if do_chi2_NN_classification
     bof_chi2dist = zeros(size(bof_test,1),size(bof_train,1));
     
     % bof_chi2dist = slmetric_pw(bof_train, bof_test, 'chisq');
-    for i = 1:size(bof_test,1)
-        for j = 1:size(bof_train,1)
-            bof_chi2dist(i,j) = chi2(bof_test(i,:),bof_train(j,:)); 
-        end
+
+
+    if testIfTrueValidationIfFalse
+        file_bof_chi2dist = ['bof_chi2dist (test) - ', desc_name, '.mat'];
+    else
+        file_bof_chi2dist = ['bof_chi2dist (validation) - ', desc_name, '.mat'];
     end
 
+    path_file_bof_chi2dist = fullfile(basepath,'img',dataset_dir,file_bof_chi2dist);
     
+    if isfile(path_file_bof_chi2dist)
+        load(path_file_bof_chi2dist);
+    else
+        for i = 1:size(bof_test,1)
+            for j = 1:size(bof_train,1)
+                bof_chi2dist(i,j) = chi2(bof_test(i,:),bof_train(j,:)); 
+            end
+        end
+
+        save(path_file_bof_chi2dist,'bof_chi2dist');
+        
+    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RANSAC %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -138,17 +170,30 @@ end
 
 % LINEAR SVM
 if do_svm_linar_classification
-    % cross-validation
-    C_vals=log2space(7,10,5);
-    for i=1:length(C_vals);
-        opt_string=['-t 0  -v 5 -c ' num2str(C_vals(i))];
-        xval_acc(i)=svmtrain(labels_train,bof_train,opt_string);
-    end
-    %select the best C among C_vals and test your model on the testing set.
-    [v,ind]=max(xval_acc);
+    
+    file_model_linearSVM = ['SVM linear model - ', desc_name, '.mat'];
+    path_file_model_linearSVM = fullfile(basepath,'img',dataset_dir,file_model_linearSVM);
 
-    % train the model and test
-    model=svmtrain(labels_train,bof_train,['-t 0 -c ' num2str(C_vals(ind))]);
+    if isfile(path_file_model_linearSVM)
+        load(path_file_model_linearSVM);
+    else
+
+        % cross-validation
+        C_vals=log2space(7,10,5);
+        for i=1:length(C_vals);
+            opt_string=['-t 0  -v 5 -c ' num2str(C_vals(i))];
+            xval_acc(i)=svmtrain(labels_train,bof_train,opt_string);
+        end
+        %select the best C among C_vals and test your model on the testing set.
+        [v,ind]=max(xval_acc);
+    
+        % train the model and test
+        model=svmtrain(labels_train,bof_train,['-t 0 -c ' num2str(C_vals(ind))]);
+        
+        save(path_file_model_linearSVM,'model');
+    end
+
+    
     disp('*** SVM - linear ***');
     svm_lab=svmpredict(labels_test,bof_test,model);
     
@@ -199,23 +244,38 @@ end
 
 
 if do_svm_precomp_linear_classification
-    % compute kernel matrix
-    Ktrain = bof_train*bof_train';
-    Ktest = bof_test*bof_train';
 
-    % cross-validation
-    C_vals=log2space(7,10,5);
-    for i=1:length(C_vals);
-        opt_string=['-t 4  -v 5 -c ' num2str(C_vals(i))];
-        xval_acc(i)=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],opt_string);
+     file_model_precompLinearSVM = ['SVM precomp. linear model - ', desc_name, '.mat'];
+     path_file_model_precompLinearSVM = fullfile(basepath,'img',dataset_dir,file_model_precompLinearSVM);
+
+    if isfile(path_file_model_precompLinearSVM)
+        load(path_file_model_precompLinearSVM);
+    else
+
+        % compute kernel matrix
+        Ktrain = bof_train*bof_train';
+
+        % cross-validation
+        C_vals=log2space(7,10,5);
+        for i=1:length(C_vals);
+            opt_string=['-t 4  -v 5 -c ' num2str(C_vals(i))];
+            xval_acc(i)=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],opt_string);
+        end
+        [v,ind]=max(xval_acc);
+        
+        % train the model and test
+        model=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],['-t 4 -c ' num2str(C_vals(ind))]);
+        % we supply the missing scalar product (actually the values of 
+        % non-support vectors could be left as zeros.... 
+        % consider this if the kernel is computationally inefficient.
+
+        
+        save(path_file_model_precompLinearSVM,'model');
     end
-    [v,ind]=max(xval_acc);
+
+    % compute kernel matrix
+    Ktest = bof_test*bof_train';
     
-    % train the model and test
-    model=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],['-t 4 -c ' num2str(C_vals(ind))]);
-    % we supply the missing scalar product (actually the values of 
-    % non-support vectors could be left as zeros.... 
-    % consider this if the kernel is computationally inefficient.
     disp('*** SVM - precomputed linear kernel ***');
     precomp_svm_lab=svmpredict(labels_test,[(1:size(Ktest,1))' Ktest],model);
     
@@ -250,33 +310,46 @@ end
 % try a non-linear svm with the histogram intersection kernel!
 
 if do_svm_inter_classification
-    Ktrain=zeros(size(bof_train,1),size(bof_train,1));
-    for i=1:size(bof_train,1)
-        for j=1:size(bof_train,1)
-            hists = [bof_train(i,:);bof_train(j,:)];
-            Ktrain(i,j)=sum(min(hists));
+    
+    file_model_interSVM = ['SVM inters. kernel model - ', desc_name, '.mat'];
+    path_file_model_interSVM = fullfile(basepath,'img',dataset_dir,file_model_interSVM);
+
+    if isfile(path_file_model_interSVM)
+        load(path_file_model_interSVM);
+    else
+
+       Ktrain=zeros(size(bof_train,1),size(bof_train,1));
+        for i=1:size(bof_train,1)
+            for j=1:size(bof_train,1)
+                hists = [bof_train(i,:);bof_train(j,:)];
+                Ktrain(i,j)=sum(min(hists));
+            end
         end
+    
+        % cross-validation
+        C_vals=log2space(3,10,5);
+        for i=1:length(C_vals);
+            opt_string=['-t 4  -v 5 -c ' num2str(C_vals(i))];
+            xval_acc(i)=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],opt_string);
+        end
+        [v,ind]=max(xval_acc);
+    
+        % train the model and test
+        model=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],['-t 4 -c ' num2str(C_vals(ind))] );
+        % we supply the missing scalar product (actually the values of non-support vectors could be left as zeros.... consider this if the kernel is computationally inefficient.
+  
+        save(path_file_model_interSVM,'model');
     end
 
     Ktest=zeros(size(bof_test,1),size(bof_train,1));
-    for i=1:size(bof_test,1)
-        for j=1:size(bof_train,1)
-            hists = [bof_test(i,:);bof_train(j,:)];
-            Ktest(i,j)=sum(min(hists));
+        for i=1:size(bof_test,1)
+            for j=1:size(bof_train,1)
+                hists = [bof_test(i,:);bof_train(j,:)];
+                Ktest(i,j)=sum(min(hists));
+            end
         end
-    end
 
-    % cross-validation
-    C_vals=log2space(3,10,5);
-    for i=1:length(C_vals);
-        opt_string=['-t 4  -v 5 -c ' num2str(C_vals(i))];
-        xval_acc(i)=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],opt_string);
-    end
-    [v,ind]=max(xval_acc);
-
-    % train the model and test
-    model=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],['-t 4 -c ' num2str(C_vals(ind))] );
-    % we supply the missing scalar product (actually the values of non-support vectors could be left as zeros.... consider this if the kernel is computationally inefficient.
+    
     disp('*** SVM - intersection kernel ***');
     [precomp_ik_svm_lab,conf]=svmpredict(labels_test,[(1:size(Ktest,1))' Ktest],model);
 
@@ -295,23 +368,39 @@ end
 
 %% 4.3 & 4.4: CHI-2 KERNEL (pre-compute kernel) %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if do_svm_chi2_classification    
-    % compute kernel matrix
-    Ktrain = kernel_expchi2(bof_train,bof_train);
-    Ktest = kernel_expchi2(bof_test,bof_train);
-    
-    % cross-validation
-    C_vals=log2space(2,10,5);
-    for i=1:length(C_vals);
-        opt_string=['-t 4  -v 5 -c ' num2str(C_vals(i))];
-        xval_acc(i)=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],opt_string);
-    end
-    [v,ind]=max(xval_acc);
+if do_svm_chi2_classification
 
-    % train the model and test
-    model=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],['-t 4 -c ' num2str(C_vals(ind))] );
-    % we supply the missing scalar product (actually the values of non-support vectors could be left as zeros.... 
-    % consider this if the kernel is computationally inefficient.
+
+    file_model_chi2SVM = ['SVM chi-2 kernel model - ', desc_name, '.mat'];
+    path_file_model_chi2SVM = fullfile(basepath,'img',dataset_dir,file_model_chi2SVM);
+
+    if isfile(path_file_model_chi2SVM)
+        load(path_file_model_chi2SVM);
+    else
+
+        % compute kernel matrix
+        Ktrain = kernel_expchi2(bof_train,bof_train);
+        
+        
+        % cross-validation
+        C_vals=log2space(2,10,5);
+        for i=1:length(C_vals);
+            opt_string=['-t 4  -v 5 -c ' num2str(C_vals(i))];
+            xval_acc(i)=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],opt_string);
+        end
+        [v,ind]=max(xval_acc);
+    
+        % train the model and test
+        model=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],['-t 4 -c ' num2str(C_vals(ind))] );
+        % we supply the missing scalar product (actually the values of non-support vectors could be left as zeros.... 
+        % consider this if the kernel is computationally inefficient.
+  
+        save(path_file_model_chi2SVM,'model');
+    end
+
+
+    Ktest = kernel_expchi2(bof_test,bof_train);
+   
     disp('*** SVM - Chi2 kernel ***');
     [precomp_chi2_svm_lab,conf]=svmpredict(labels_test,[(1:size(Ktest,1))' Ktest],model);
     
