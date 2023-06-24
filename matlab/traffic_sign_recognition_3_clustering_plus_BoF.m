@@ -40,9 +40,11 @@ if do_form_codebook
         [VC] = kmeans_bo(double(DESC),K,max_km_iters);%visual codebook
         VC = VC';%transpose for compatibility with following functions
         clear DESC;
+
+        save(path_file_visual_vocab,'VC');
     end
         
-        save(path_file_visual_vocab,'VC');
+        
 end
 
 
@@ -188,6 +190,8 @@ if ~bof_already_loaded_train
         % save histograms
         desc_train(i).bof=H(:)';
     end
+
+    save(path_file_desc_train,'desc_train');
 end
     
 if ~bof_already_loaded_test
@@ -203,7 +207,10 @@ if ~bof_already_loaded_test
         % save histograms
         desc_test(i).bof=H(:)';
     end
+
+    save(path_file_desc_test,'desc_test');
 end
+
 
 clear file_desc_train;
 clear path_file_desc_train;
