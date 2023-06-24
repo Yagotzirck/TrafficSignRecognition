@@ -51,7 +51,7 @@ if do_L2_NN_classification
         load(path_file_bof_l2dist);
     else
         bof_l2dist=eucliddist(bof_test,bof_train);
-        save(path_file_bof_l2dist,'bof_l2dist');
+        save(path_file_bof_l2dist,'bof_l2dist','-v7.3');
     end   
 
 
@@ -112,7 +112,7 @@ if do_chi2_NN_classification
             end
         end
 
-        save(path_file_bof_chi2dist,'bof_chi2dist');
+        save(path_file_bof_chi2dist,'bof_chi2dist','-v7.3');
         
     end
 
@@ -190,7 +190,7 @@ if do_svm_linar_classification
         % train the model and test
         model=svmtrain(labels_train,bof_train,['-t 0 -c ' num2str(C_vals(ind))]);
         
-        save(path_file_model_linearSVM,'model');
+        save(path_file_model_linearSVM,'model','-v7.3');
     end
 
     
@@ -270,7 +270,7 @@ if do_svm_precomp_linear_classification
         % consider this if the kernel is computationally inefficient.
 
         
-        save(path_file_model_precompLinearSVM,'model');
+        save(path_file_model_precompLinearSVM,'model','-v7.3');
     end
 
     % compute kernel matrix
@@ -338,7 +338,7 @@ if do_svm_inter_classification
         model=svmtrain(labels_train,[(1:size(Ktrain,1))' Ktrain],['-t 4 -c ' num2str(C_vals(ind))] );
         % we supply the missing scalar product (actually the values of non-support vectors could be left as zeros.... consider this if the kernel is computationally inefficient.
   
-        save(path_file_model_interSVM,'model');
+        save(path_file_model_interSVM,'model','-v7.3');
     end
 
     Ktest=zeros(size(bof_test,1),size(bof_train,1));
@@ -395,7 +395,7 @@ if do_svm_chi2_classification
         % we supply the missing scalar product (actually the values of non-support vectors could be left as zeros.... 
         % consider this if the kernel is computationally inefficient.
   
-        save(path_file_model_chi2SVM,'model');
+        save(path_file_model_chi2SVM,'model','-v7.3');
     end
 
 
