@@ -48,7 +48,7 @@ else
          end
     end
     
-    save(path_file_desc_train,'desc_train');
+    %save(path_file_desc_train,'desc_train');   % It will be saved later
 end
 
 
@@ -102,5 +102,5 @@ else
          end
     end
     
-    save(path_file_desc_test,'desc_test');
+    %save(path_file_desc_test,'desc_test');     % It will be saved later
 end
