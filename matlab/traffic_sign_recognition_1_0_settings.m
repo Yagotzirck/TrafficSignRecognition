@@ -17,8 +17,8 @@ dataset_dir = 'TrafficSigns';
 
 %desc_name = 'sift';
 %desc_name = 'csift';
-desc_name = 'dsift';
-%desc_name = 'cdsift';
+%desc_name = 'dsift';
+desc_name = 'cdsift';
 %desc_name = 'msdsift';
 
 % FLAGS
@@ -49,7 +49,7 @@ use_resized_imgs = 1;
 
 
 % If true, use RANSAC-kNN for NN-Chi2; if false, use 1NN-Chi2
-use_ransac = 1;
+use_ransac = 0;
 
 
 testIfTrueValidationIfFalse = false;
@@ -59,7 +59,7 @@ do_feat_quantization = 1;
 
 do_L2_NN_classification = 1;
 do_chi2_NN_classification = 1;
-do_svm_linar_classification = 1;
+do_svm_linar_classification = 0;
 do_svm_llc_linar_classification = 0;
 do_svm_precomp_linear_classification = 1;
 do_svm_inter_classification = 1;

@@ -96,7 +96,7 @@ if do_feat_quantization
           desc_train(i).quantdist = quantdist;
         end
 
-        save(path_file_desc_train,'desc_train');
+        %save(path_file_desc_train,'desc_train');   % It will be saved later
     end
 
     if ~quantization_already_loaded_test
@@ -109,7 +109,7 @@ if do_feat_quantization
           desc_test(i).quantdist = quantdist;
         end
 
-        save(path_file_desc_test,'desc_test');
+        %save(path_file_desc_test,'desc_test');     % It will be saved later
     end
 end
 
