@@ -67,7 +67,7 @@ if do_L2_NN_classification
    
 
     % distance weights
-    w = 1 ./ mv .^2;
+    w = 1 ./ mv(:,1:kMax) .^2;
 
     method_name='NN L2';
 
@@ -167,10 +167,8 @@ if do_chi2_NN_classification
         numTestImgs = length(labels_test);
         numClasses = length(classes);
     
-       
-    
         % distance weights
-        w = 1 ./ mv .^2;
+        w = 1 ./ mv(:,1:kMax) .^2;
     
         method_name='NN Chi-2';
     
