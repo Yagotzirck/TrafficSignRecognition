@@ -55,19 +55,50 @@ if do_L2_NN_classification
     end   
 
 
+% Nearest neighbor classification (k-NN) using L2 distance
+    [mv,mi] = mink(bof_l2dist,kMax,2);
+    bof_l2lab = zeros(size(labels_test));
 
-    % Nearest neighbor classification (1-NN) using L2 distance
-    [mv,mi] = min(bof_l2dist,[],2);
-    bof_l2lab = labels_train(mi);
     
-    method_name='NN L2';
-    acc=sum(bof_l2lab==labels_test)/length(labels_test);
-    fprintf('\n*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name,acc*100);
+    numTrainImgs = length(labels_train);
+    numTestImgs = length(labels_test);
+    numClasses = length(classes);
+
    
-    % Compute classification accuracy
-    compute_accuracy(data,labels_test,bof_l2lab,classes,method_name,desc_test,...
-                      visualize_confmat & have_screen,... 
-                      visualize_res & have_screen);
+
+    % distance weights
+    w = 1 ./ mv .^2;
+
+    method_name='NN L2';
+
+    for k = uint32(1):kMax
+
+        for currTestImg = 1:numTestImgs
+            classVotes = zeros(size(classes));
+    
+            for currTrainImg = 1:k
+                currTestImgIdx = mi(currTestImg,currTrainImg);
+                currTrainImgClassIdx = labels_train(currTestImgIdx);
+    
+                classVotes(currTrainImgClassIdx) = ...
+                    classVotes(currTrainImgClassIdx) + w(currTestImg,currTrainImg);
+            end
+            
+            [~,maxClassIdx] = max(classVotes);
+    
+            bof_l2lab(currTestImg) = maxClassIdx;
+    
+        end
+
+        acc=sum(bof_l2lab==labels_test)/length(labels_test);
+        fprintf('*** %s (k = %d) ***\nAccuracy = %1.4f%% (classification)\n',method_name, k, acc*100);
+     
+        % Compute classification accuracy
+        compute_accuracy(data,labels_test,bof_l2lab,classes,method_name,desc_test,...
+                          visualize_confmat & have_screen,... 
+                          visualize_res & have_screen);
+    end
+         
 end
 
 
@@ -118,36 +149,61 @@ if do_chi2_NN_classification
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RANSAC %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if use_ransac
-    % Nearest neighbor classification (k-NN) using
-    % Chi2 distance + homography + RANSAC
-
-    k = 20; % Numero di immagini più simili da considerare
-
-    bestImageIndices = find_best_match(desc_train, desc_test, bof_chi2dist, k);
-
-    bof_chi2lab = labels_train(bestImageIndices);
-
-
+    if use_ransac
+        % Nearest neighbor classification (k-NN) using
+        % Chi2 distance + homography + RANSAC
+        bestImageIndices = find_best_match(desc_train, desc_test, bof_chi2dist, kRansac);
+        bof_chi2lab = labels_train(bestImageIndices);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% END OF RANSAC PART %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-else
-    % Nearest neighbor classification (1-NN) using Chi2 distance
-    [mv,mi] = min(bof_chi2dist,[],2);
-    bof_chi2lab = labels_train(mi);
-end
-
-    method_name='NN Chi-2';
-
+    else
+        % Nearest neighbor classification (k-NN) using Chi2 distance
+        [mv,mi] = mink(bof_chi2dist,kMax,2);
+        bof_chi2lab = zeros(size(labels_test));
     
-    acc=sum(bof_chi2lab==labels_test)/length(labels_test);
-    fprintf('*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name,acc*100);
- 
-    % Compute classification accuracy
-    compute_accuracy(data,labels_test,bof_chi2lab,classes,method_name,desc_test,...
-                      visualize_confmat & have_screen,... 
-                      visualize_res & have_screen);
+        
+        numTrainImgs = length(labels_train);
+        numTestImgs = length(labels_test);
+        numClasses = length(classes);
+    
+       
+    
+        % distance weights
+        w = 1 ./ mv .^2;
+    
+        method_name='NN Chi-2';
+    
+        for k = uint32(1):kMax
+    
+            for currTestImg = 1:numTestImgs
+                classVotes = zeros(size(classes));
+        
+                for currTrainImg = 1:k
+                    currTestImgIdx = mi(currTestImg,currTrainImg);
+                    currTrainImgClassIdx = labels_train(currTestImgIdx);
+        
+                    classVotes(currTrainImgClassIdx) = ...
+                        classVotes(currTrainImgClassIdx) + w(currTestImg,currTrainImg);
+                end
+                
+                [~,maxClassIdx] = max(classVotes);
+        
+                bof_chi2lab(currTestImg) = maxClassIdx;
+        
+            end
+    
+            acc=sum(bof_chi2lab==labels_test)/length(labels_test);
+            fprintf('*** %s (k = %d) ***\nAccuracy = %1.4f%% (classification)\n',method_name, k, acc*100);
+         
+            % Compute classification accuracy
+            compute_accuracy(data,labels_test,bof_chi2lab,classes,method_name,desc_test,...
+                              visualize_confmat & have_screen,... 
+                              visualize_res & have_screen);
+        end
+         
+    end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

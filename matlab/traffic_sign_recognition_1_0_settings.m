@@ -15,10 +15,10 @@ dataset_dir = 'TrafficSigns';
 % 'dsift' for dense features detection (SIFT
 % descriptors computed at a grid of overlapped patches)
 
-%desc_name = 'sift';
+desc_name = 'sift';
 %desc_name = 'csift';
 %desc_name = 'dsift';
-desc_name = 'cdsift';
+%desc_name = 'cdsift';
 %desc_name = 'msdsift';
 
 % FLAGS
@@ -48,22 +48,32 @@ use_cropped_imgs = 0;
 use_resized_imgs = 1;
 
 
+%%%%%%%%%%%%%%%%%%%%%% NEAREST NEIGHBORS SETTINGS %%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The upper limit for the neighbors to test; that is, the algorithm checks
+% all accuracy results for all k values in the range 1-kMax
+kMax = uint32(50);
+
+kRansac = 5; % Numero di immagini più simili da considerare per RANSAC
+
+
 % If true, use RANSAC-kNN for NN-Chi2; if false, use 1NN-Chi2
 use_ransac = 0;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 testIfTrueValidationIfFalse = false;
 
 do_form_codebook = 1;
 do_feat_quantization = 1;
 
-do_L2_NN_classification = 1;
+do_L2_NN_classification = 0;
 do_chi2_NN_classification = 1;
 do_svm_linar_classification = 0;
 do_svm_llc_linar_classification = 0;
-do_svm_precomp_linear_classification = 1;
-do_svm_inter_classification = 1;
-do_svm_chi2_classification = 1;
+do_svm_precomp_linear_classification = 0;
+do_svm_inter_classification = 0;
+do_svm_chi2_classification = 0;
   
 visualize_feat = 0;
 visualize_words = 0;
