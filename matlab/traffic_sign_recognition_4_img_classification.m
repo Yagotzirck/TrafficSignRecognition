@@ -120,6 +120,9 @@ end
 
 
 if do_chi2_NN_classification
+
+    method_name='NN Chi-2';
+
     % compute pair-wise CHI2
     bof_chi2dist = zeros(size(bof_test,1),size(bof_train,1));
     
@@ -155,6 +158,14 @@ if do_chi2_NN_classification
         bestImageIndices = find_best_match(desc_train, desc_test, bof_chi2dist, kRansac);
         bof_chi2lab = labels_train(bestImageIndices);
 
+        acc=sum(bof_chi2lab==labels_test)/length(labels_test);
+        fprintf('*** %s ***\nAccuracy = %1.4f%% (classification)\n',method_name, acc*100);
+     
+        % Compute classification accuracy
+        compute_accuracy(data,labels_test,bof_chi2lab,classes,method_name,desc_test,...
+                          visualize_confmat & have_screen,... 
+                          visualize_res & have_screen);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%% END OF RANSAC PART %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     else
@@ -162,15 +173,13 @@ if do_chi2_NN_classification
         [mv,mi] = mink(bof_chi2dist,kMax,2);
         bof_chi2lab = zeros(size(labels_test));
     
-        
+    
         numTrainImgs = length(labels_train);
         numTestImgs = length(labels_test);
         numClasses = length(classes);
     
         % distance weights
         w = 1 ./ mv(:,1:kMax) .^2;
-    
-        method_name='NN Chi-2';
     
         for k = uint32(1):kMax
     
@@ -208,6 +217,16 @@ end
 %   End of EXERCISE 3.1                                                   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+% Free some RAM before building the SVM models
+
+% clear mv;
+% clear mi;
+% clear bof_chi2lab;
+% clear bof_chi2dist;
+% clear bof_l2lab;
+% clear bof_l2dist;
+% clear w;
 
 
 %% SVM classification (using libsvm) %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
