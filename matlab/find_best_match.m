@@ -49,61 +49,61 @@ for i = 1:numTestImgs
         % Get the x/y coordinates for the current test image's SIFT points
         currTrainImgSIFTsCoords = [desc_train(currTrainIdx).c, desc_train(currTrainIdx).r];
 
+
+
+
+%         matchingPts1 = currTestImgSIFTsCoords;
+%         matchingPts2 = currTrainImgSIFTsCoords;
+
+%         try
+%             [tform, inliers1, inliers2] = ...
+%             estimateGeometricTransform(matchingPts1, matchingPts2, 'affine');
+%             currInliersCnt = size(inliers1,1);
+%         
+%             success = true;
+%       
+%         catch
+%             currInliersCnt = 0;
+%             success = false;
+%         end
+% 
+%         if showMatches && success
+%             imgTrain = imread(desc_train(currTrainIdx).imgfname);
+% 
+%             figure;
+%             showMatchedFeatures(imgTest, imgTrain, ...
+%                 matchingPts1, matchingPts2, 'montage');
+%             title('Putatively Matched Points (Including Outliers)');
+% 
+%             figure;
+%             showMatchedFeatures(imgTest, imgTrain, ...
+%                 inliers1, inliers2, 'montage');
+%             title('Matched Points (Inliers Only)');
+% 
+%             pause;
+% 
+%             close all;
+%         end
+
         % Find the matching SIFT points between the current train and test
         % images
-%         matchingPts = match_sift_pts( ...
-%             currTestImgSIFTs, currTrainImgSIFTs, ...
-%             currTestImgSIFTsCoords, currTrainImgSIFTsCoords, 0.6);
-
-
-        matchingPts1 = currTestImgSIFTsCoords;
-        matchingPts2 = currTrainImgSIFTsCoords;
+        matchingPts = match_sift_pts( ...
+            currTestImgSIFTs, currTrainImgSIFTs, ...
+            currTestImgSIFTsCoords, currTrainImgSIFTsCoords, 0.55);
 
         try
-            [tform, inliers1, inliers2] = ...
-            estimateGeometricTransform(matchingPts1, matchingPts2, 'affine');
-            currInliersCnt = size(inliers1,1);
-        
-            success = true;
-      
+
+            trainMatchingPts =  matchingPts(:,1:2)';
+            testMatchingPts =   matchingPts(:,3:4)';
+
+            
+            [~, inliers] = ransacfithomography( ...
+                trainMatchingPts, testMatchingPts, 0.005);
+    
+            currInliersCnt = size(inliers,2);
         catch
             currInliersCnt = 0;
-            success = false;
         end
-
-        if showMatches && success
-            imgTrain = imread(desc_train(currTrainIdx).imgfname);
-
-            figure;
-            showMatchedFeatures(imgTest, imgTrain, ...
-                matchingPts1, matchingPts2, 'montage');
-            title('Putatively Matched Points (Including Outliers)');
-
-            figure;
-            showMatchedFeatures(imgTest, imgTrain, ...
-                inliers1, inliers2, 'montage');
-            title('Matched Points (Inliers Only)');
-
-            pause;
-
-            close all;
-        end
-
-%         if(size(matchingPts,1) >= 4)
-% 
-%             trainMatchingPts =  matchingPts(:,1:2)';
-%             testMatchingPts =   matchingPts(:,3:4)';
-% 
-%             % Normalize x and y relatively to width and height
-%             
-%         
-%             [~, inliers] = ransacfithomography( ...
-%                 matchingPts(:,1:2)', matchingPts(:,3:4)', 0.005);
-%     
-%             currInliersCnt = size(inliers,1);
-%         else
-%             currInliersCnt = 0;
-%         end
 
 
         
